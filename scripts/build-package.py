@@ -318,6 +318,43 @@ def check_compose(raw_text, cfg, versions):
         err("compose 含 CRLF 行尾 —— 必须是 LF")
 
 
+def check_ci_workflow():
+    """CI 工作流的 YAML 结构自检（零依赖，只查最容易踩断的那一类错误）。
+
+    实测踩过：在 `run: |` 块里写跨多行的 `--notes "…"`，续行顶格 —— 块标量就此结束，
+    整个工作流解析失败。表现是「推上去一点动静都没有，或只出现一条没有 job 的失败记录」，
+    本地完全看不出来。这里用缩进规则把它拦在提交前：
+    块标量（`|` / `>`）的内容行必须比声明它的那一行缩进更深。
+    """
+    wf_dir = os.path.join(APP_ROOT, ".github", "workflows")
+    if not os.path.isdir(wf_dir):
+        warn("没有 .github/workflows/ —— 本应用靠 CI 构建推送镜像，确认是刻意的")
+        return
+    for name in sorted(os.listdir(wf_dir)):
+        if not name.endswith((".yml", ".yaml")):
+            continue
+        path = os.path.join(wf_dir, name)
+        lines = read_text(path).split("\n")
+        block_indent = None      # 进入块标量时记下声明行的缩进
+        for i, line in enumerate(lines, 1):
+            stripped = line.strip()
+            indent = len(line) - len(line.lstrip(" "))
+            if block_indent is not None:
+                if stripped == "":
+                    continue
+                if indent <= block_indent:
+                    if re.match(r"^[A-Za-z_][\w.-]*:", stripped) or stripped.startswith("-"):
+                        block_indent = None          # 正常退出块，继续往下扫
+                    else:
+                        err("%s:%d 块标量内容顶格/缩进不足（%r）—— 会让整个工作流解析失败，"
+                            "一个 job 都不创建。把这段内容改成单行变量或补齐缩进。"
+                            % (name, i, stripped[:50]))
+            if block_indent is None:
+                m = re.match(r"^(\s*)[\w.\"'-]+:\s*[|>][-+]?\s*$", line)
+                if m:
+                    block_indent = len(m.group(1))
+
+
 def check_i18n_coverage():
     """英文模式会不会漏出中文。
 
@@ -476,6 +513,7 @@ def main():
 
     check_web_dir()
     check_i18n_coverage()
+    check_ci_workflow()
 
     if not args.skip_verify:
         import subprocess

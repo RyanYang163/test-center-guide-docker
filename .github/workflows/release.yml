@@ -169,16 +169,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          # 注意：说明文字必须写成【单行变量】。
+          # 之前把 --notes "…" 写成跨多行且续行顶格，直接撑断了 run: | 的 YAML 块 ——
+          # 后果是工作流解析失败、一个 job 都不创建（2026-09-24 实际踩到）。
+          NOTES="TOS 7 Docker 应用包（test-center-guide-docker）。需先在 TOS 应用中心安装并启用 DockerEngine；镜像托管在 Docker Hub 公共仓库（多架构）；附 trivy-report.txt —— 镜像层漏洞扫描报告，可修复的 HIGH/CRITICAL = 0。"
           gh release create "${{ steps.meta.outputs.tag }}" \
             "${{ steps.asset.outputs.tgz }}" \
             "${{ steps.asset.outputs.tgz }}.sha256" \
             trivy-report.txt \
             --repo "$GITHUB_REPOSITORY" \
             --title "${{ steps.meta.outputs.appid }} ${{ steps.meta.outputs.version }}" \
-            --notes "TOS 7 Docker 应用包（test-center-guide-docker）。
-
-需先在 TOS 应用中心安装并启用 DockerEngine。
-
-镜像：\`${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}\`（Docker Hub 公共仓库，多架构）
-
-附 trivy-report.txt：镜像层漏洞扫描报告（可修复的 HIGH/CRITICAL = 0）。"
+            --notes "$NOTES"
