@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="faq.title">常见问题 · Test Center 上手指南</title>
+<meta name="description" content="Test Center 部署与使用中的常见问题：端口、镜像来源、数据目录、默认账号、升级与卸载。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/i18n.js"></script>
+<script defer src="assets/app.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="./">
+      <span class="brand-mark">TC</span>
+      <span>Test Center Guide</span>
+    </a>
+    <nav class="main-nav">
+      <a href="features.html" data-i18n="nav.features">功能总览</a>
+      <a href="deploy.html" data-i18n="nav.deploy">部署指南</a>
+      <a href="generator.html" data-i18n="nav.generator">部署助手</a>
+      <a href="faq.html" data-i18n="nav.faq">常见问题</a>
+    </nav>
+    <button class="lang-toggle" type="button">English</button>
+  </div>
+</header>
+
+<main>
+  <h1 data-i18n="faq.title">常见问题</h1>
+  <p class="lede" data-i18n="faq.lede">部署与使用中最常被问到的几件事。</p>
+
+  <details open>
+    <summary data-i18n="faq.account.q">部署完 Test Center 之后，用什么账号登录？</summary>
+    <p data-i18n="faq.account.a">默认管理员是 test / Admin123（部署工具创建，可在部署时改）；手动部署则是你在「部署指南」第 7 步传给 create_superuser 的用户名、邮箱与密码。两种情况都要在首次登录后立刻改密码 —— 它拥有整个平台的权限。</p>
+  </details>
+
+  <details>
+    <summary data-i18n="faq.port.q">这个指南应用本身占用了哪个端口？</summary>
+    <p data-i18n="faq.port.a">宿主机端口 19013，容器内监听 8080。端口可在应用安装后按需调整，但要保证容器映射同步改。</p>
+  </details>
+
+  <details>
+    <summary data-i18n="faq.image.q">镜像是从哪来的？</summary>
+    <p data-i18n="faq.image.a">镜像托管在 Docker Hub 的公共仓库里，基于官方 nginx 的 alpine 变体构建；站点页面为本项目自有内容，完整源码在仓库中可查。</p>
+  </details>
+
+  <details>
+    <summary data-i18n="faq.data.q">应用有哪些数据目录？</summary>
+    <p data-i18n="faq.data.a">只有访问日志：/Volume*/DockerAppData/test-center-guide-docker/logs。站点是纯静态内容，部署助手生成的数据只写在你浏览器本地，服务端不保存任何东西。</p>
+  </details>
+
+  <details>
+    <summary data-i18n="faq.upgrade.q">怎么升级？</summary>
+    <p data-i18n="faq.upgrade.a">TOS 的 Docker 应用不支持平台内升级，只能卸载后重装；卸载时不要勾选「同时删除数据」，DockerAppData 下的内容会保留。</p>
+  </details>
+
+  <details>
+    <summary data-i18n="faq.platform.q">Test Center 平台本身怎么部署？</summary>
+    <p data-i18n="faq.platform.a">去「部署指南」页，那里有从零开始的完整命令；也可以先用「部署助手」生成一份属于你环境的 .env。</p>
+  </details>
+
+  <h2 data-i18n="faq.perm.t">权限与数据处理</h2>
+  <div class="table-wrap">
+    <table data-i18n-html="faq.perm.table">
+      <thead>
+        <tr><th>项</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>运行用户</td><td>容器内以 uid/gid 1000 的非 root 用户运行</td></tr>
+        <tr><td>网络访问</td><td>仅监听容器内 8080，不发起任何对外请求</td></tr>
+        <tr><td>收集的数据</td><td>无。不采集访问者信息，不写入第三方服务</td></tr>
+        <tr><td>本机存储</td><td>仅在你浏览器里保存语言偏好（localStorage）；生成结果需要你手动下载才会落盘</td></tr>
+        <tr><td>服务端存储</td><td>仅 nginx 访问日志，落在 DockerAppData 下的 logs 目录</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 data-i18n="faq.uninst.t">卸载时数据去哪了</h2>
+  <ul data-i18n-html="faq.uninst.list">
+    <li>默认卸载（不勾选删除数据）：<code>/Volume*/DockerAppData/test-center-guide-docker/</code> 完整保留，重装后还在</li>
+    <li>勾选删除数据的卸载：仅清理上面这个目录，容器与镜像一并移除</li>
+  </ul>
+
+  <p><a href="index.html" data-i18n="common.backhome">返回首页</a></p>
+</main>
+
+<footer>
+  <span data-i18n="footer.version">Test Center Guide · v1.0.0</span>
+  <span data-i18n="footer.license">本站内容采用 MIT 许可证；镜像基于 Docker Hub 官方 nginx 构建。</span>
+</footer>
+
+</body>
+</html>

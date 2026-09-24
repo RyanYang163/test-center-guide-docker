@@ -1,0 +1,78 @@
+# ============================================================
+# Test Center Guide —— TOS 7 Docker 应用编排文件
+#
+# 规范依据：《TOS 7 Application Development Guide》第 9 章
+#   - 每个 service 必须有 healthcheck
+#   - 禁止 privileged / network_mode: host
+#   - 禁止绑定 22/80/443/445/3306/5050/5432/6379/8181/8443 等系统端口
+#   - 数据目录必须挂到 /Volume*/DockerAppData/<appid>/...
+#   - 镜像必须来自 Docker Hub 且锁定版本 tag
+#   - 非 root：每个 service 都必须有 user 字段
+#
+# 本文件是【模板】：@@VAR@@ 占位符由 scripts/build-package.py 依据
+# versions.env 替换后产出 dist/docker-compose.yml。
+#
+# 上游来源与许可证：镜像基于 Docker Hub 官方 nginx（BSD-2-Clause），
+# 站点内容为本项目自有，采用 MIT 许可证，全文见仓库根目录 LICENSE。
+# ============================================================
+
+version: "3.8"
+
+services:
+
+  # ==========================================================
+  # 静态站点：nginx 伺服 Test Center 上手指南与部署助手
+  # 容器名 = 应用 id（平台要求主容器命名为 id）
+  # 容器内监听 8080（非特权端口，非 root 运行的前提）
+  # ==========================================================
+  test-center-guide-docker:
+    image: @@APP_IMAGE@@
+    container_name: test-center-guide-docker
+    restart: unless-stopped
+    user: "1000:1000"
+    ports:
+      - "@@WEB_PORT@@:8080"
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      # 访问日志落盘（应用无其他持久化数据：站点为纯静态内容，
+      # 部署助手生成的内容只存在访问者浏览器本地，不上传服务端）
+      - /Volume*/DockerAppData/test-center-guide-docker/logs:/var/log/nginx
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      # 白名单：仅保留 nginx 以非 root 启动时读写自身目录所需的最小集合
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - test-center-guide
+
+networks:
+  test-center-guide:
+    name: test-center-guide-docker-net
+    driver: bridge
+
+# ============================================================
+# x-app-meta —— 带 Web UI 的 Docker 应用必需，且必须位于文件末尾
+# web.port 即上面映射的宿主机端口
+# ============================================================
+x-app-meta:
+  web:
+    port: @@WEB_PORT@@
+    protocol: http

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="deploy.title">部署指南 · Test Center 上手指南</title>
+<meta name="description" content="Test Center 的两种部署方式：一键脚本与手动分步，含完整命令、前置条件与默认账号说明。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/i18n.js"></script>
+<script defer src="assets/app.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="./">
+      <span class="brand-mark">TC</span>
+      <span>Test Center Guide</span>
+    </a>
+    <nav class="main-nav">
+      <a href="features.html" data-i18n="nav.features">功能总览</a>
+      <a href="deploy.html" data-i18n="nav.deploy">部署指南</a>
+      <a href="generator.html" data-i18n="nav.generator">部署助手</a>
+      <a href="faq.html" data-i18n="nav.faq">常见问题</a>
+    </nav>
+    <button class="lang-toggle" type="button">English</button>
+  </div>
+</header>
+
+<main>
+  <h1 data-i18n="deploy.title">部署指南</h1>
+  <p class="lede" data-i18n="deploy.lede">两种部署方式：一键脚本（推荐，全自动）与手动分步（理解每一步做了什么）。两种方式都需要先准备好一个 MySQL 与一个 Redis。</p>
+
+  <h2 data-i18n="deploy.prep.t">部署前准备</h2>
+  <ul data-i18n-html="deploy.prep.list">
+    <li>一台可用的 Linux 或 NAS，已安装并启用 Docker 与 Docker Compose</li>
+    <li>一个 MySQL 8 实例（可以是用容器另起的），并已知 host / 端口 / 库名 / 账号 / 密码</li>
+    <li>一个 Redis 7 实例，并已知 host / 端口 / 密码</li>
+    <li>一个空闲端口给前端使用，默认 <code>19613</code>（避开系统保留端口）</li>
+    <li>镜像仓库地址与登录凭据 —— 由项目方提供</li>
+  </ul>
+  <div class="panel warn">
+    <p><strong data-i18n="deploy.panel.cred.title">关于凭据：</strong><span data-i18n="deploy.panel.cred.body">本指南与镜像内不内置任何仓库地址、账号或口令。镜像仓库地址与登录凭据请向项目方索取；部署助手生成的 <code>.env</code> 里也只填你自己环境的值。</span></p>
+  </div>
+  <p data-i18n-html="deploy.prep.hint">不想手填参数的话，先到 <a href="generator.html">部署助手</a> 生成 <code>.env</code>，再回来按下方步骤执行。</p>
+
+  <h2 data-i18n="deploy.way1.t">方式一：一键脚本部署（推荐）</h2>
+  <p data-i18n-html="deploy.way1.body">项目方随镜像提供一键脚本（<code>deploy-image.sh</code> + <code>docker-compose-image.yml</code> + <code>.env.example</code>）。脚本会依次完成：检测环境 → 登录镜像仓库拉取前后端镜像 → 交互式填写配置 → 创建网络并自动发现已有的 MySQL / Redis 容器 → 生成 <code>.env</code> → 创建数据库 → 启动后端并等待就绪 → 初始化数据库（迁移、定位策略、定时任务、通知模板、组件包）→ 创建管理员账号 → 启动全部服务。</p>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.way1.code"><code># 在存放脚本的目录执行
+chmod +x deploy-image.sh
+./deploy-image.sh</code></pre>
+  </div>
+  <p data-i18n="deploy.way1.note">交互式配置环节里，除了密码必须自己填，其余项确认无误直接回车使用默认值即可。脚本跑完会打印访问地址。</p>
+
+  <div class="panel">
+    <h3 data-i18n="deploy.way1.ok.title">登录</h3>
+    <p data-i18n-html="deploy.way1.ok.body">看到部署完成的输出后，用浏览器打开 <code>http://服务器IP:19613</code>，出现登录页即为成功。<strong>首次登录后请立即修改默认管理员密码。</strong></p>
+    <p data-i18n-html="deploy.way1.ok.cred">部署工具默认创建的管理员账号是 <code>test</code> / <code>Admin123</code>；如果你在部署时改过默认值，就以你填的为准。手动部署的实例用的则是下面第 7 步你自己传给 <code>create_superuser</code> 的账号。</p>
+  </div>
+
+  <h2 data-i18n="deploy.way2.t">方式二：手动分步部署</h2>
+  <p data-i18n-html="deploy.way2.intro">手动方式适合理解每一步在做什么，或者一键脚本在你的环境里跑不通时的兜底。完整命令可由 <a href="generator.html">部署助手</a> 按你的参数生成，下面是要点顺序：</p>
+
+  <h3 data-i18n="deploy.step1.t">1. 创建专用网络</h3>
+  <p data-i18n="deploy.step1.body">前后端与 MySQL / Redis 必须在同一个 Docker 网络里，否则后端连不上数据库。</p>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.step1.code"><code>docker network create test_center_network
+
+# 已有的 MySQL / Redis 容器也要接进来
+docker network connect test_center_network &lt;你的MySQL容器名&gt;
+docker network connect test_center_network &lt;你的Redis容器名&gt;</code></pre>
+  </div>
+
+  <h3 data-i18n="deploy.step2.t">2. 登录镜像仓库并拉取镜像</h3>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.step2.code"><code>docker login &lt;镜像仓库地址&gt;
+docker pull &lt;后端镜像&gt;
+docker pull &lt;前端镜像&gt;</code></pre>
+  </div>
+
+  <h3 data-i18n="deploy.step3.t">3. 写配置文件</h3>
+  <p data-i18n-html="deploy.step3.body">把部署助手生成的 <code>.env</code> 放到部署目录。关键项：<code>SERVER_PUBLIC_IP</code>、<code>DB_*</code>、<code>REDIS_*</code>、<code>SECRET_KEY</code>、<code>WEB_PORT</code>。文件含口令，记得 <code>chmod 600 .env</code>。</p>
+
+  <h3 data-i18n="deploy.step4.t">4. 创建数据库</h3>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.step4.code"><code>docker exec -i &lt;你的MySQL容器名&gt; mysql -uroot -p'&lt;MySQL密码&gt;' -e \
+  "CREATE DATABASE IF NOT EXISTS \`test-center\` \
+   DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"</code></pre>
+  </div>
+
+  <h3 data-i18n="deploy.step5.t">5. 启动服务</h3>
+  <p data-i18n-html="deploy.step5.body">数据库迁移由后端容器在启动时自动执行，不需要手动 <code>migrate</code>。首次启动要等迁移跑完，耐心一点。</p>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.step5.code"><code>docker compose --env-file .env up -d
+docker compose ps</code></pre>
+  </div>
+
+  <h3 data-i18n="deploy.step6.t">6. 初始化基础数据</h3>
+  <p data-i18n="deploy.step6.body">这几条会装入定位策略、定时任务、通知模板、组件包与 Agent 文档索引 —— 缺一项功能就会不完整。</p>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.step6.code"><code>docker exec &lt;后端容器名&gt; python manage.py init_locator_strategies
+docker exec &lt;后端容器名&gt; python manage.py init_system_tasks
+docker exec &lt;后端容器名&gt; python manage.py init_notification_templates
+docker exec &lt;后端容器名&gt; python manage.py load_component_pack
+docker exec &lt;后端容器名&gt; python manage.py sync_agent_builtin_docs</code></pre>
+  </div>
+
+  <h3 data-i18n="deploy.step7.t">7. 创建管理员账号</h3>
+  <p data-i18n-html="deploy.step7.body">把用户名、邮箱、密码换成你自己的。<strong>之后就用这个账号登录</strong>，请记牢，并且不要用弱密码。</p>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.step7.code"><code>docker exec -i &lt;后端容器名&gt; python manage.py shell &lt;&lt; 'EOSHELL'
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(username='test').exists():
+    User.objects.create_superuser('test', 'test@example.com', '换成你的强密码')
+    print('管理员账号已创建')
+else:
+    print('管理员账号已存在')
+EOSHELL</code></pre>
+  </div>
+  <p class="muted" data-i18n-html="deploy.step7.note">如果你用的是一键脚本或 TOS 应用，它会替你建 <code>test</code> / <code>Admin123</code>；首次登录后请立刻改掉。</p>
+
+  <h2 data-i18n="deploy.verify.t">部署验证</h2>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.verify.code"><code># 容器是否都起来了
+docker compose ps
+
+# 前端是否响应
+curl -I http://&lt;服务器IP&gt;:19613/
+
+# 后端日志（首次启动时看迁移进度）
+docker logs -f &lt;后端容器名&gt;</code></pre>
+  </div>
+  <p data-i18n-html="deploy.verify.note">浏览器打开 <code>http://服务器IP:19613</code> 看到登录页，说明部署成功。</p>
+
+  <h2 data-i18n="deploy.ops.t">常用运维命令</h2>
+  <div class="code-wrap">
+<pre data-i18n-code="deploy.ops.code"><code>docker compose ps                  # 查看状态
+docker compose logs -f backend     # 跟踪某个服务日志
+docker compose restart backend     # 重启某个服务
+docker compose down                # 停止并移除容器（不动数据卷）
+docker compose up -d               # 重新拉起</code></pre>
+  </div>
+  <div class="panel warn">
+    <p><strong data-i18n="deploy.ops.upgrade.title">升级怎么做？</strong><span data-i18n-html="deploy.ops.upgrade.body">拉取新版本镜像后重建容器：<code>docker compose pull &amp;&amp; docker compose up -d</code>。数据库迁移会在后端容器启动时自动执行。降级前请先备份数据库。</span></p>
+  </div>
+
+  <p><a href="generator.html" data-i18n="deploy.next">打开部署助手生成属于你环境的配置 →</a></p>
+</main>
+
+<footer>
+  <span data-i18n="footer.version">Test Center Guide · v1.0.0</span>
+  <span data-i18n="footer.license">本站内容采用 MIT 许可证；镜像基于 Docker Hub 官方 nginx 构建。</span>
+</footer>
+
+</body>
+</html>

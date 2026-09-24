@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="index.title">Test Center 上手指南</title>
+<meta name="description" content="Test Center 的离线部署指南与部署助手：功能总览、分步部署指引，并在浏览器内生成 .env 与部署命令。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/i18n.js"></script>
+<script defer src="assets/app.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="./">
+      <span class="brand-mark">TC</span>
+      <span>Test Center Guide</span>
+    </a>
+    <nav class="main-nav">
+      <a href="features.html" data-i18n="nav.features">功能总览</a>
+      <a href="deploy.html" data-i18n="nav.deploy">部署指南</a>
+      <a href="generator.html" data-i18n="nav.generator">部署助手</a>
+      <a href="faq.html" data-i18n="nav.faq">常见问题</a>
+    </nav>
+    <button class="lang-toggle" type="button">English</button>
+  </div>
+</header>
+
+<main>
+  <h1 data-i18n="index.title">Test Center 上手指南</h1>
+  <p class="lede" data-i18n="index.lede">Test Center 是面向测试团队的一体化测试管理平台：用例管理、接口测试、UI 自动化、APP 自动化、性能压测、需求分析与知识库检索。本页把「怎么装起来、怎么用起来」整理成一份可离线查阅的指南，并提供在浏览器内直接生成配置的部署助手。</p>
+
+  <h2 data-i18n="index.quick">先从这里开始</h2>
+  <div class="grid">
+    <a class="card" href="features.html">
+      <span class="badge">01</span>
+      <h3 data-i18n="index.card.features.t">功能总览</h3>
+      <p data-i18n="index.card.features.d">平台由哪些模块组成、各能解决什么问题、跑起来需要几个容器。</p>
+    </a>
+    <a class="card" href="deploy.html">
+      <span class="badge">02</span>
+      <h3 data-i18n="index.card.deploy.t">部署指南</h3>
+      <p data-i18n="index.card.deploy.d">两种部署方式（一键脚本 / 手动分步）的完整命令与前置条件。</p>
+    </a>
+    <a class="card" href="generator.html">
+      <span class="badge">03</span>
+      <h3 data-i18n="index.card.generator.t">部署助手</h3>
+      <p data-i18n="index.card.generator.d">填几个参数，自动生成 .env 文件与整套部署命令，可复制可下载。</p>
+    </a>
+    <a class="card" href="faq.html">
+      <span class="badge">04</span>
+      <h3 data-i18n="index.card.faq.t">常见问题</h3>
+      <p data-i18n="index.card.faq.d">端口、镜像来源、数据目录，以及升级卸载时数据去哪了。</p>
+    </a>
+  </div>
+
+  <div class="panel">
+    <p data-i18n="index.notice.body">本应用是纯粹的使用指南：所有页面都在容器内的 nginx 上伺服，不连接任何外部服务、不收集任何数据。部署助手完全在你的浏览器里计算，生成的结果只保存在本机，不会上传。</p>
+    <p class="muted" data-i18n="common.requires">需要先在 TOS 应用中心安装并启用 DockerEngine。</p>
+  </div>
+
+  <h2 data-i18n="index.stack.t">技术栈与运行形态</h2>
+  <div class="table-wrap">
+    <table data-i18n-html="index.stack.table">
+      <thead>
+        <tr><th>组件</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>前端</td><td>Vue 3 单页应用，由 nginx 伺服并反向代理后端接口</td></tr>
+        <tr><td>后端</td><td>Django（ASGI）+ Django-Q2 异步任务消费者</td></tr>
+        <tr><td>数据库</td><td>MySQL 8（业务数据）</td></tr>
+        <tr><td>缓存 / 队列</td><td>Redis 7</td></tr>
+        <tr><td>可选组件</td><td>Apache Tika（文档解析）、Qdrant（向量检索）、InfluxDB（压测看板）</td></tr>
+        <tr><td>最小运行集</td><td>前端 + 后端 + MySQL + Redis（4 个容器）</td></tr>
+        <tr><td>完整运行集</td><td>再加 Tika / Qdrant / InfluxDB / 任务消费者（8 个容器）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" data-i18n="index.stack.note">完整栈首次安装耗时主要在数据库迁移（后端含数十个子应用的迁移脚本），实测可达十几分钟；只是体验界面的话，用最小运行集更快。</p>
+
+  <h2 data-i18n="index.demo.t">线上体验</h2>
+  <p data-i18n="index.demo.body">想先看看界面再决定要不要部署，可以联系项目方索取体验站地址与账号：</p>
+  <p class="muted" data-i18n="index.demo.note">体验站属于项目方，本指南不内置其地址与账号；体验账号会变动，也不适合写进公开页面。</p>
+</main>
+
+<footer>
+  <span data-i18n="footer.version">Test Center Guide · v1.0.0</span>
+  <span data-i18n="footer.license">本站内容采用 MIT 许可证；镜像基于 Docker Hub 官方 nginx 构建。</span>
+</footer>
+
+</body>
+</html>

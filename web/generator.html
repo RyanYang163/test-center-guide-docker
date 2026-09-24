@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="gen.title">部署助手 · Test Center 上手指南</title>
+<meta name="description" content="在浏览器本地生成 Test Center 的 .env 配置文件与整套部署命令，不上传任何数据。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/i18n.js"></script>
+<script defer src="assets/app.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="./">
+      <span class="brand-mark">TC</span>
+      <span>Test Center Guide</span>
+    </a>
+    <nav class="main-nav">
+      <a href="features.html" data-i18n="nav.features">功能总览</a>
+      <a href="deploy.html" data-i18n="nav.deploy">部署指南</a>
+      <a href="generator.html" data-i18n="nav.generator">部署助手</a>
+      <a href="faq.html" data-i18n="nav.faq">常见问题</a>
+    </nav>
+    <button class="lang-toggle" type="button">English</button>
+  </div>
+</header>
+
+<main>
+  <h1 data-i18n="gen.title">部署助手</h1>
+  <p class="lede" data-i18n="gen.lede">填写你的环境参数，页面会在浏览器本地生成 .env 文件内容与整套部署命令。所有计算都在你本机完成，不会发送到任何服务器。</p>
+
+  <h2 data-i18n="gen.params.t">环境参数</h2>
+
+  <form id="generator-form" autocomplete="off">
+    <div class="form-grid">
+      <div class="field">
+        <label for="srvIp" data-i18n="gen.f.srvIp">服务器 IP（对外访问地址）</label>
+        <input id="srvIp" name="srvIp" type="text" placeholder="192.168.1.10">
+      </div>
+      <div class="field">
+        <label for="webPort" data-i18n="gen.f.webPort">前端端口</label>
+        <input id="webPort" name="webPort" type="number" min="1" max="65535" value="19613">
+      </div>
+
+      <div class="field">
+        <label for="dbHost" data-i18n="gen.f.dbHost">MySQL 地址</label>
+        <input id="dbHost" name="dbHost" type="text" placeholder="192.168.1.20">
+      </div>
+      <div class="field">
+        <label for="dbPort" data-i18n="gen.f.dbPort">MySQL 端口</label>
+        <input id="dbPort" name="dbPort" type="number" min="1" max="65535" value="3306">
+      </div>
+      <div class="field">
+        <label for="dbName" data-i18n="gen.f.dbName">数据库名</label>
+        <input id="dbName" name="dbName" type="text" value="test-center">
+      </div>
+      <div class="field">
+        <label for="dbUser" data-i18n="gen.f.dbUser">MySQL 用户</label>
+        <input id="dbUser" name="dbUser" type="text" value="root">
+      </div>
+      <div class="field">
+        <label for="dbPassword" data-i18n="gen.f.dbPassword">MySQL 密码</label>
+        <input id="dbPassword" name="dbPassword" type="password" placeholder="留空则生成占位符" data-i18n-ph="gen.ph.dbPassword">
+      </div>
+
+      <div class="field">
+        <label for="redisHost" data-i18n="gen.f.redisHost">Redis 地址</label>
+        <input id="redisHost" name="redisHost" type="text" placeholder="192.168.1.20">
+      </div>
+      <div class="field">
+        <label for="redisPort" data-i18n="gen.f.redisPort">Redis 端口</label>
+        <input id="redisPort" name="redisPort" type="number" min="1" max="65535" value="6379">
+      </div>
+      <div class="field">
+        <label for="redisPassword" data-i18n="gen.f.redisPassword">Redis 密码</label>
+        <input id="redisPassword" name="redisPassword" type="password" placeholder="留空则生成占位符" data-i18n-ph="gen.ph.redisPassword">
+      </div>
+
+      <div class="field">
+        <label for="mysqlContainer" data-i18n="gen.f.mysqlContainer">MySQL 容器名（用于建库命令）</label>
+        <input id="mysqlContainer" name="mysqlContainer" type="text" value="test_center_mysql">
+      </div>
+      <div class="field">
+        <label for="backendContainer" data-i18n="gen.f.backendContainer">后端容器名（用于初始化命令）</label>
+        <input id="backendContainer" name="backendContainer" type="text" value="test_center_backend">
+      </div>
+
+      <div class="field">
+        <label for="adminUser" data-i18n="gen.f.adminUser">管理员账号</label>
+        <input id="adminUser" name="adminUser" type="text" value="test">
+      </div>
+      <div class="field">
+        <label for="adminEmail" data-i18n="gen.f.adminEmail">管理员邮箱</label>
+        <input id="adminEmail" name="adminEmail" type="email" value="test@example.com">
+      </div>
+      <div class="field">
+        <label for="adminPassword" data-i18n="gen.f.adminPassword">管理员密码</label>
+        <input id="adminPassword" name="adminPassword" type="password" placeholder="请填一个强密码" data-i18n-ph="gen.ph.adminPassword">
+      </div>
+
+      <div class="field">
+        <label for="secretKey" data-i18n="gen.f.secretKey">SECRET_KEY（应用密钥）</label>
+        <input id="secretKey" name="secretKey" type="text" placeholder="点击下方按钮在本机随机生成" data-i18n-ph="gen.ph.secretKey">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="btn-generate" type="submit" data-i18n="gen.btn.generate">生成配置</button>
+      <button class="btn secondary" id="btn-secret" type="button" data-i18n="gen.btn.secret">重新生成 SECRET_KEY</button>
+    </div>
+    <p class="hint" data-i18n="gen.hint">密码不会离开这个页面：生成逻辑全部由本页的 JavaScript 在本机完成。</p>
+  </form>
+
+  <h2 data-i18n="gen.output.t">生成结果</h2>
+
+  <h3>.env</h3>
+  <div class="actions">
+    <button class="btn secondary" id="btn-copy-env" type="button" data-i18n="gen.btn.copyEnv">复制 .env</button>
+    <button class="btn secondary" id="btn-download" type="button" data-i18n="gen.btn.download">下载 .env</button>
+  </div>
+  <pre id="out-env"><code></code></pre>
+
+  <h3 data-i18n="gen.cmdHeading">部署命令</h3>
+  <div class="actions">
+    <button class="btn secondary" id="btn-copy-cmd" type="button" data-i18n="gen.btn.copyCmd">复制全部命令</button>
+  </div>
+  <pre id="out-cmd"><code></code></pre>
+
+  <div class="panel">
+    <p data-i18n-html="gen.notes">生成的命令与 <a href="deploy.html">部署指南</a> 的分步说明一一对应。<code>&lt;尖括号&gt;</code> 里的内容（镜像仓库地址、镜像名）需要按项目方提供的信息自行替换 —— 本工具不知道、也不保存这些凭据。</p>
+  </div>
+</main>
+
+<footer>
+  <span data-i18n="footer.version">Test Center Guide · v1.0.0</span>
+  <span data-i18n="footer.license">本站内容采用 MIT 许可证；镜像基于 Docker Hub 官方 nginx 构建。</span>
+</footer>
+
+</body>
+</html>

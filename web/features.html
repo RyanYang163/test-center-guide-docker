@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="features.title">功能总览 · Test Center 上手指南</title>
+<meta name="description" content="Test Center 的功能模块、技术栈与运行形态。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/i18n.js"></script>
+<script defer src="assets/app.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="./">
+      <span class="brand-mark">TC</span>
+      <span>Test Center Guide</span>
+    </a>
+    <nav class="main-nav">
+      <a href="features.html" data-i18n="nav.features">功能总览</a>
+      <a href="deploy.html" data-i18n="nav.deploy">部署指南</a>
+      <a href="generator.html" data-i18n="nav.generator">部署助手</a>
+      <a href="faq.html" data-i18n="nav.faq">常见问题</a>
+    </nav>
+    <button class="lang-toggle" type="button">English</button>
+  </div>
+</header>
+
+<main>
+  <h1 data-i18n="features.title">功能总览</h1>
+  <p class="lede" data-i18n="features.lede">Test Center 把测试团队日常用到的工具收在一个平台里：用例与套件管理、接口测试、UI 自动化、APP 自动化、性能压测、需求分析、知识库检索与报表。</p>
+
+  <h2 data-i18n="features.modules.t">功能模块</h2>
+  <div class="table-wrap">
+    <table data-i18n-html="features.modules.table">
+      <thead>
+        <tr><th>模块</th><th>能力</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>项目与版本</td><td>项目、版本、模块树；测试资产统一归档在同一处</td></tr>
+        <tr><td>用例与套件</td><td>用例编写、评审、步骤化执行、套件编排与批量执行</td></tr>
+        <tr><td>接口测试</td><td>接口定义、接口用例、场景编排、自动化执行与断言</td></tr>
+        <tr><td>UI 自动化</td><td>浏览器自动化执行；元素定位策略可配置，支持定位自愈</td></tr>
+        <tr><td>APP 自动化</td><td>真机 / 模拟器驱动，ADB 隧道，OCR 文字断言</td></tr>
+        <tr><td>性能测试</td><td>JMeter 脚本执行，压测指标写入 InfluxDB 并出实时看板</td></tr>
+        <tr><td>需求分析</td><td>文档解析（Apache Tika）、需求合理性评审、测试点生成</td></tr>
+        <tr><td>知识库检索</td><td>向量检索（Qdrant），答案带来源追踪</td></tr>
+        <tr><td>AI 助手</td><td>内置 Agent 与 MCP 工具接口，可用自然语言驱动平台能力</td></tr>
+        <tr><td>报表与通知</td><td>测试报告（Allure）汇总，支持飞书机器人等通知渠道</td></tr>
+        <tr><td>数据工厂</td><td>按规则批量生成测试数据</td></tr>
+        <tr><td>定时任务</td><td>任务调度与执行记录，支持周期回归</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 data-i18n="features.stack.t">技术栈</h2>
+  <div class="table-wrap">
+    <table data-i18n-html="features.stack.table">
+      <thead>
+        <tr><th>层</th><th>选型</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>前端</td><td>Vue 3 + Vite，构建产物由 nginx 伺服</td></tr>
+        <tr><td>后端</td><td>Django 4.2（ASGI），REST + WebSocket</td></tr>
+        <tr><td>异步任务</td><td>Django-Q2 集群，处理定时与耗时任务</td></tr>
+        <tr><td>数据库</td><td>MySQL 8（utf8mb4）</td></tr>
+        <tr><td>缓存 / 队列</td><td>Redis 7</td></tr>
+        <tr><td>执行依赖</td><td>Playwright + Chromium（UI）、JMeter + JRE（压测）、Tesseract（OCR）、ADB（真机）</td></tr>
+        <tr><td>可选组件</td><td>Apache Tika（文档解析）、Qdrant（向量库）、InfluxDB（时序看板）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="panel warn">
+    <h3 data-i18n="features.panel.warn.title">为什么后端镜像很大、首次启动很慢？</h3>
+    <p data-i18n="features.panel.warn.body">因为后端不只是「网页的后台」，它还要在容器里真正执行测试：开浏览器跑 UI 用例、跑 JMeter 压测、连真机做 APP 自动化、做 OCR 识别。Chromium、JMeter、Tesseract 这些执行依赖都装在它里面。</p>
+    <p data-i18n="features.panel.warn.body2">另外首次启动要按顺序跑完数十个子应用的数据库迁移，实测可达十几分钟 —— 这段时间属于一次性初始化，不是卡死。</p>
+  </div>
+
+  <h2 data-i18n="features.arch.t">运行形态</h2>
+  <p data-i18n="features.arch.lede">按需要选最小集或完整集，两种形态共用同一套镜像：</p>
+  <div class="table-wrap">
+    <table data-i18n-html="features.arch.table">
+      <thead>
+        <tr><th>形态</th><th>容器</th><th>适用</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>最小运行集</td><td>前端、后端、MySQL、Redis</td><td>单人或小团队：用例、接口测试、基础报表</td></tr>
+        <tr><td>完整运行集</td><td>最小集 + 任务消费者、Tika、Qdrant、InfluxDB</td><td>需要文档解析、知识库检索、压测看板与定时任务</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" data-i18n="features.arch.note">对外只需要暴露前端一个端口（默认 <code>19613</code>）：后端、数据库、缓存全部留在容器网络内部，由前端 nginx 反向代理，不额外开放端口。</p>
+
+  <p><a href="deploy.html" data-i18n="nav.deploy">部署指南</a> · <a href="generator.html" data-i18n="nav.generator">部署助手</a></p>
+</main>
+
+<footer>
+  <span data-i18n="footer.version">Test Center Guide · v1.0.0</span>
+  <span data-i18n="footer.license">本站内容采用 MIT 许可证；镜像基于 Docker Hub 官方 nginx 构建。</span>
+</footer>
+
+</body>
+</html>

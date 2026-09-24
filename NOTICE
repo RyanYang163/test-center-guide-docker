@@ -1,0 +1,36 @@
+# NOTICE
+
+## 本应用
+
+- **名称**：Test Center Guide（TOS 应用 ID：`test-center-guide-docker`）
+- **内容**：Test Center 测试管理平台的离线上手指南与部署助手
+- **作者**：RyanYang163
+- **许可证**：MIT（全文见 `LICENSE`）
+- **仓库**：https://github.com/RyanYang163/test-center-guide-docker
+
+本站点的全部内容 —— 页面（HTML）、样式（CSS）、脚本（JavaScript）、文案、
+nginx 配置、Dockerfile 与构建脚本 —— 均为本项目原创，采用 MIT 许可证发布。
+
+## 第三方组件
+
+| 组件 | 用途 | 许可证 | 来源 |
+|------|------|--------|------|
+| nginx（Docker Hub 官方 `nginx:*-alpine` 镜像） | 伺服静态站点 | BSD-2-Clause | https://nginx.org/LICENSE |
+| Alpine Linux 基础层 | 容器基础系统 | MIT 等（见镜像内 `/etc/apk/`） | https://alpinelinux.org |
+| Docker Hub 官方镜像仓库 | 镜像托管 | — | https://hub.docker.com |
+
+镜像中不包含上述组件以外的任何第三方代码；不含任何编译产物或来源不明二进制。
+
+## 关于被介绍的产品
+
+本应用介绍的是 **Test Center** 测试管理平台，用于说明其功能与部署方式。
+
+- 本仓库与镜像**不包含**该平台的任何源代码、二进制、镜像层或配置文件；
+- 不内置该平台的任何仓库地址、账号、口令或体验凭据；
+- 页面中的部署步骤为依据公开部署流程自行撰写的通用说明。
+
+若相关权利人认为本说明存在不妥，请通过仓库 Issue 联系，我们会立即调整或下架。
+
+## 联系方式
+
+问题反馈请提 Issue：https://github.com/RyanYang163/test-center-guide-docker/issues

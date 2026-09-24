@@ -1,0 +1,97 @@
+[en-us]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[zh-cn]
+name = "Test Center 上手指南"
+auth = "Ryan"
+descript = "Test Center 的离线上手指南与部署助手：功能总览、分步部署指引，并在浏览器内一键生成 .env 与部署命令。纯静态页面，不收集任何数据。"
+release_note = "1. 首次发布。"
+important = "需要先在 TOS 应用中心安装并启用 DockerEngine。"
+
+[zh-hk]
+name = "Test Center 上手指南"
+auth = "Ryan"
+descript = "Test Center 的離線上手指南與部署助手：功能總覽、分步部署指引，並在瀏覽器內一鍵生成 .env 與部署指令。純靜態頁面，不收集任何資料。"
+release_note = "1. 首次發佈。"
+important = "需要先在 TOS 應用中心安裝並啟用 DockerEngine。"
+
+[fr-fr]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[de-de]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[it-it]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[es-es]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[hu-hu]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[ja-jp]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[ko-kr]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[pl-pl]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[ru-ru]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[tr-tr]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
+
+[pt-pt]
+name = "Test Center Guide"
+auth = "Ryan"
+descript = "Offline onboarding guide and deployment helper for Test Center: feature overview, step-by-step deployment instructions, and an in-browser generator for your .env file and deploy commands. Pure static pages; no data is collected."
+release_note = "1. Initial release."
+important = "Requires DockerEngine from the TOS App Center."
