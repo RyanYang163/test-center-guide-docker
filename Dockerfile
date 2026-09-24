@@ -12,7 +12,7 @@
 # 构建（CI 或本地，构建上下文 = 本仓库根目录）：
 #   docker build -t <dockerhub_user>/test-center-guide:<version> .
 # ============================================================
-FROM nginx:1.27-alpine
+FROM nginx:1.31.6-alpine
 
 LABEL org.opencontainers.image.title="Test Center Guide" \
       org.opencontainers.image.description="Offline onboarding guide and deployment helper for Test Center" \
