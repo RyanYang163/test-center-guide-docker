@@ -22,7 +22,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: 解析并校验版本号
         id: meta
@@ -122,6 +122,21 @@ jobs:
           if [ "$FIXABLE" != "0" ]; then
             echo "::error::存在 $FIXABLE 个「有官方修复版本」的 HIGH/CRITICAL 漏洞，需换基础镜像版本。"
             grep -E "^[a-z0-9.-]+ +[A-Z0-9-]+ +v?[0-9]" r.txt | head -20 || true
+
+            # 顺手把线上最新的 nginx alpine 标签列出来。
+            # 本项目开发机连不上 hub.docker.com（实测四个端点全 000），
+            # 只有 CI 能查 —— 所以让失败的这一次把候选版本带回来，省一轮盲试。
+            TOKEN=$(curl -s --max-time 25 "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull" \
+                    | python3 -c "import json,sys;print(json.load(sys.stdin).get('token',''))" 2>/dev/null || true)
+            if [ -n "$TOKEN" ]; then
+              TAGS=$(curl -s --max-time 25 -H "Authorization: Bearer $TOKEN" \
+                     "https://registry-1.docker.io/v2/library/nginx/tags/list" \
+                     | python3 -c "import json,sys;d=json.load(sys.stdin);print('\n'.join(d.get('tags') or []))" \
+                     | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-alpine$' | sort -V | tail -12 | tr '\n' ' ')
+              echo "::notice::当前镜像 ${IMG} 不达标。线上较新的 nginx alpine 标签（挑一个换 Dockerfile 的 FROM）: ${TAGS}"
+            else
+              echo "::warning::取不到 nginx 标签列表（registry 鉴权失败）"
+            fi
             exit 1
           fi
 
