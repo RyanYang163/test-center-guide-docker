@@ -118,6 +118,27 @@ python scripts/build-package.py --skip-verify    # 离线环境跳过镜像在�
 - [ ] 设备上确认 `19013` 端口未被占用
 - [ ] 备注栏写清本应用的用途（静态指南 + 部署助手），避免被判「功能不完整」
 
+## 基础镜像与漏洞门禁（改版本前必读）
+
+CI 在**推镜像之前**会先本地构建、用 Trivy 扫一遍：**「存在官方修复」的 HIGH/CRITICAL 必须为 0**，
+否则流水线停在那一步、镜像不会推出去（宁可没有，也不推脏镜像）。
+
+⚠️ **基础镜像 tag 是会腐烂的**：镜像不在本地，CI 每次按 tag 重新拉；而 Alpine 基础包与 nginx
+本身一直在出 CVE 和修复版。实测记录：
+
+| 日期 | 钉的 tag | 结果 |
+|---|---|---|
+| 2026-09-24 | `nginx:1.27-alpine`（2024 年的 minor） | ❌ **40 个可修复 HIGH/CRITICAL**，门禁拦下 |
+
+**换版本的步骤**：
+
+1. 改 `Dockerfile` 的 `FROM` 与 `versions.env` 的 `NGINX_IMAGE` —— **两处必须一致**
+2. **升版本号**（同一版本号的 Release 不允许覆盖），重新打 tag 推上去
+3. 本机查不到候选版本（`hub.docker.com` 四个端点全不可达、代理也不放行 registry）——
+   扫描失败时 CI 会用 `::notice::` 把线上较新的 alpine 标签回传，
+   **读注解而不是下日志**（日志有 302 跳转到 `objects.githubusercontent.com`，本机会断）：
+   `python 101-临时目录\watch-ci-run.py RyanYang163/test-center-guide-docker workflow_dispatch`
+
 ## 改站点内容时注意（i18n 约定）
 
 站点是**中英双语**的，右上角可切换。机制刻意做成单向，避免两份中文互相漂移：
