@@ -14,6 +14,19 @@
 # ============================================================
 FROM nginx:1.31.6-alpine
 
+# ============================================================
+# 构建时把 Alpine 基础包升到仓库当前版本（自愈，别删）
+#
+# 为什么必须这么做：官方镜像只在 Alpine **发版**时重建，所以镜像里的包会滞后于
+# Alpine 仓库。实测 2026-09-24：`nginx:1.31.6-alpine` 是前一天刚构建的，
+# 但镜像中的 `libexpat 2.8.4-r0` 已带一个「存在官方修复」的 HIGH
+# （CVE-2026-93990，Alpine 仓库里早就是 2.8.5-r0）——CI 的 Trivy 门禁因此拦下。
+#
+# 加这一行后，每次构建都取 Alpine 仓库当前版本：仓库修了就自动跟上，
+# 仓库还没修的（上游尚未修复）trivy 也不计入，门禁长期稳定。
+# ============================================================
+RUN apk upgrade --no-cache
+
 LABEL org.opencontainers.image.title="Test Center Guide" \
       org.opencontainers.image.description="Offline onboarding guide and deployment helper for Test Center" \
       org.opencontainers.image.licenses="MIT" \

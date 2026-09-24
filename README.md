@@ -129,7 +129,12 @@ CI 在**推镜像之前**会先本地构建、用 Trivy 扫一遍：**「存在�
 | 日期 | 钉的 tag | 结果 |
 |---|---|---|
 | 2026-09-24 | `nginx:1.27-alpine`（2024 年的 minor） | ❌ **40 个可修复 HIGH/CRITICAL**，门禁拦下 |
-| 2026-09-24 | `nginx:1.31.6-alpine`（CI 回传的最新标签） | ✅ 见 Release 附带的 `trivy-report.txt` |
+| 2026-09-24 | `nginx:1.31.6-alpine`（当天刚构建） | ⚠️ 仍差 1 个：镜像里的 `libexpat 2.8.4-r0` 有可修复 HIGH（仓库里已是 2.8.5-r0）|
+| 2026-09-24 | 同上 + **构建时 `apk upgrade --no-cache`** | ✅ 结果见 Release 附带的 `trivy-report.txt` |
+
+> **教训**：`alpine` 系基础镜像**只在 Alpine 发版时重建**，所以镜像里的包会滞后于 Alpine 仓库 ——
+> 连「当天刚构建」的 tag 都可能差一两个包。因此在 Dockerfile 里加 `RUN apk upgrade --no-cache`，
+> 每次构建都取仓库当前版本：仓库修了就自动跟上，仓库还没修的 trivy 也不计入（`--ignore-unfixed`）。**别删这一行。**
 
 **换版本的步骤**：
 
