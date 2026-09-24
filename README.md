@@ -6,7 +6,7 @@ Docker 应用（提交格式 `<appid>.tar.gz`，归档根层恰好 4 个文件�
 - **应用 ID**：`test-center-guide-docker`
 - **应用类型**：`docker`（单容器）
 - **打开方式**：浏览器外部打开（`open_path: true`）
-- **镜像**：`whiteelm610/test-center-guide:<version>`（Docker Hub 公共仓库）
+- **镜像**：`whiteelm/test-center-guide:<version>`（Docker Hub 公共仓库）
 - **规范依据**：《TOS 7 Application Development Guide》第 9 章 + `TOS社区应用上架规则.md`
 
 ## 这是什么
@@ -89,7 +89,7 @@ git tag 1.0.0 && git push origin 1.0.0
 
 | Secret | 说明 |
 |--------|------|
-| `DOCKERHUB_USERNAME` | Docker Hub 用户名（`whiteelm610`） |
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名（`whiteelm`） |
 | `DOCKERHUB_TOKEN` | Docker Hub Access Token，权限选 **Read & Write**（不是登录密码） |
 
 **B. 在 NAS 上手动跑**（TOS 装好 Docker Engine 后，用 Terminal）：
@@ -110,7 +110,7 @@ python scripts/build-package.py --skip-verify    # 离线环境跳过镜像在�
 
 ## 提交上架清单
 
-- [ ] 两个 Secret 已配置，镜像已推到 Docker Hub（`whiteelm610/test-center-guide:1.0.0`）
+- [ ] 两个 Secret 已配置，镜像已推到 Docker Hub（`whiteelm/test-center-guide:1.0.0`）
 - [ ] Release 资产齐全：`.tar.gz` + `.tar.gz.sha256` + `trivy-report.txt`
 - [ ] `config.ini` 的 `version` = `versions.env` 的 `TOS_VERSION` = Release tag（三处一致）
 - [ ] 平台注册填：Application ID `test-center-guide-docker`、Package Type **Docker**、
