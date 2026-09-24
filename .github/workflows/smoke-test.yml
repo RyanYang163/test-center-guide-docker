@@ -1,0 +1,81 @@
+# ============================================================
+# 运行时冒烟测试（手动触发，只读，不推任何东西）
+#
+# 为什么需要它：开发机没有 Docker，实验室设备上的 DockerEngine 又不干活 ——
+# 「镜像跑起来对不对」只有 CI 能验。GitHub runner 自带 Docker 且能访问 Docker Hub，
+# 于是把镜像拉下来真跑一遍：非 root 起得来吗、healthz 通吗、首页是 200 吗。
+#
+# 结果用 ::notice:: 回传，读注解即可（本机下不了 job 日志：302 跳转那条线断）。
+#
+# 用法：Actions → Runtime Smoke Test → Run workflow
+# ============================================================
+name: Runtime Smoke Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: "test-center-guide"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 拉取镜像并真跑一遍
+        run: |
+          set -uo pipefail
+          NS="${{ secrets.DOCKERHUB_USERNAME }}"
+          TAG=$(python3 -c "import json;print(json.load(open('config.ini'))['version'])")
+          IMG="${NS}/${IMAGE_NAME}:${TAG}"
+          echo "被测镜像：${IMG}"
+
+          # 从零开始：先清掉本地可能的同名镜像，确保测的是线上那份
+          docker rmi -f "$IMG" >/dev/null 2>&1 || true
+          if ! OUT=$(docker pull "$IMG" 2>&1); then
+            echo "::error::拉取失败：$(printf '%s' "$OUT" | tail -3 | tr '\n' ' ' | cut -c1-400)"
+            exit 1
+          fi
+          echo "::notice::拉取成功：$(printf '%s' "$OUT" | tail -1)"
+
+          # 与 TOS 侧一致：非 root、只映射一个端口、容器内听 8080
+          docker rm -f tcg-smoke >/dev/null 2>&1 || true
+          if ! OUT=$(docker run -d --name tcg-smoke --user 1000:1000 -p 19013:8080 "$IMG" 2>&1); then
+            echo "::error::启动失败：$(printf '%s' "$OUT" | tail -3 | tr '\n' ' ' | cut -c1-400)"
+            exit 1
+          fi
+          echo "::notice::容器已启动，等待就绪…"
+
+          OK=0
+          for i in $(seq 1 20); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:19013/healthz || true)
+            [ "$CODE" = "200" ] && { OK=1; echo "::notice::第 ${i} 次探活成功（healthz=200）"; break; }
+            sleep 2
+          done
+
+          echo "--- 容器状态 ---"
+          docker ps -a --filter name=tcg-smoke --format '{{.Status}}'
+          echo "--- 进程身份（必须是 1000，不能是 root）---"
+          docker exec tcg-smoke id 2>&1 | head -2 || true
+          echo "--- 各路径 HTTP 码 ---"
+          for p in / /healthz /features.html /deploy.html /generator.html /faq.html /assets/style.css /assets/app.js /assets/i18n.js; do
+            C=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://127.0.0.1:19013${p}")
+            printf '  %-22s %s\n' "$p" "$C"
+          done
+          echo "--- 首页前 3 行 ---"
+          curl -s --max-time 5 http://127.0.0.1:19013/ | head -3
+          echo "--- 容器日志 ---"
+          docker logs --tail 15 tcg-smoke 2>&1 | tail -15
+          docker rm -f tcg-smoke >/dev/null 2>&1 || true
+
+          HOME_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:19013/ || true)
+          echo "::notice::冒烟结果 healthz=${OK}(1=200通过) 首页=${HOME_CODE}"
+          if [ "$OK" != "1" ]; then
+            echo "::error::容器 40 秒内没起来或 healthz 非 200 —— 见上方日志"
+            exit 1
+          fi
+          echo "::notice::运行时冒烟测试通过 ✓ 非 root 起得来、healthz 与首页均正常"
