@@ -123,17 +123,35 @@ jobs:
             echo "::error::存在 $FIXABLE 个「有官方修复版本」的 HIGH/CRITICAL 漏洞，需换基础镜像版本。"
             grep -E "^[a-z0-9.-]+ +[A-Z0-9-]+ +v?[0-9]" r.txt | head -20 || true
 
-            # 顺手把线上最新的 nginx alpine 标签列出来。
-            # 本项目开发机连不上 hub.docker.com（实测四个端点全 000），
-            # 只有 CI 能查 —— 所以让失败的这一次把候选版本带回来，省一轮盲试。
+            # 顺手把诊断信息回传（本机连不上 Docker Hub，只有 CI 能查）：
+            #   a) 「可修复」漏洞的明细（哪个包、哪个 CVE、装了什么版本、修在什么版本）
+            #   b) 候选基础镜像 tag 的最近构建时间 —— 镜像老 = 补丁没跟上，换 tag 才有用
+            trivy image --severity HIGH,CRITICAL --ignore-unfixed --no-progress --format table -o fix.txt "$IMG" || true
+            DETAIL=$(grep -E 'CVE-' fix.txt | head -10 | tr -s ' ' | tr '\n' '|')
+            echo "::notice::可修复漏洞明细: ${DETAIL}"
+
+            for T in 1.31.6-alpine 1.30.5-alpine alpine stable-alpine; do
+              META=$(curl -s --max-time 20 "https://hub.docker.com/v2/repositories/library/nginx/tags/${T}" \
+                     | python3 -c "
+import json,sys
+try:
+    d=json.load(sys.stdin)
+    print((d.get('last_updated') or '?')[:19], ' ', round((d.get('full_size') or 0)/1048576,1), 'MB')
+except Exception as e:
+    print('取不到')
+" 2>/dev/null || echo "取不到")
+              echo "::notice::tag ${T} 最近构建: ${META}"
+            done
+
+            # 候选版本清单（最后打，方便肉眼扫）
             TOKEN=$(curl -s --max-time 25 "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull" \
                     | python3 -c "import json,sys;print(json.load(sys.stdin).get('token',''))" 2>/dev/null || true)
             if [ -n "$TOKEN" ]; then
               TAGS=$(curl -s --max-time 25 -H "Authorization: Bearer $TOKEN" \
                      "https://registry-1.docker.io/v2/library/nginx/tags/list" \
                      | python3 -c "import json,sys;d=json.load(sys.stdin);print('\n'.join(d.get('tags') or []))" \
-                     | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-alpine$' | sort -V | tail -12 | tr '\n' ' ')
-              echo "::notice::当前镜像 ${IMG} 不达标。线上较新的 nginx alpine 标签（挑一个换 Dockerfile 的 FROM）: ${TAGS}"
+                     | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-alpine(-slim)?$' | sort -V | tail -14 | tr '\n' ' ')
+              echo "::notice::线上较新的 nginx alpine 标签（挑一个换 Dockerfile 的 FROM）: ${TAGS}"
             else
               echo "::warning::取不到 nginx 标签列表（registry 鉴权失败）"
             fi
