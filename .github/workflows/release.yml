@@ -158,6 +158,34 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
 
+      - name: 校验镜像匿名可拉（TOS 设备装机就是匿名拉）
+        run: |
+          set -euo pipefail
+          NS="${{ secrets.DOCKERHUB_USERNAME }}"
+          REPO="${{ env.IMAGE_NAME }}"
+          TAG="${{ steps.meta.outputs.version }}"
+          ACCEPT="application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json"
+
+          TOKEN=$(curl -s --max-time 25 "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${NS}/${REPO}:pull" \
+                  | python3 -c "import json,sys;print(json.load(sys.stdin).get('token',''))")
+          CODE=$(curl -s -o /tmp/manifest.json -m 25 -w '%{http_code}' -H "Authorization: Bearer ${TOKEN}" -H "Accept: ${ACCEPT}" \
+                 "https://registry-1.docker.io/v2/${NS}/${REPO}/manifests/${TAG}")
+          echo "匿名拉取 manifest -> HTTP ${CODE}"
+          if [ "$CODE" != "200" ]; then
+            echo "::error::镜像 ${NS}/${REPO}:${TAG} 匿名拉不到（HTTP ${CODE}）。若该仓库是私有的，请到 hub.docker.com 把仓库改成 Public —— TOS 设备装机时是匿名拉取，私有仓库装不上。"
+            exit 1
+          fi
+          PLATS=$(python3 -c "
+          import json
+          d=json.load(open('/tmp/manifest.json'))
+          ms=d.get('manifests') or []
+          if ms:
+              print(' '.join(sorted({(m.get('platform') or {}).get('os','?')+'/'+(m.get('platform') or {}).get('architecture','?') for m in ms})))
+          else:
+              print('单架构（无 manifest list）')
+          ")
+          echo "::notice::镜像已推送且匿名可拉 ✓  ${NS}/${REPO}:${TAG}  架构: ${PLATS}"
+
       - name: 构建 TOS 应用包
         run: |
           set -euo pipefail

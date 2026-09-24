@@ -1,0 +1,81 @@
+# ============================================================
+# 镜像校验（只读，随时可手动跑）
+#
+# 为什么需要它：TOS 设备安装应用时是**匿名拉取**镜像。仓库若是私有的，
+# 装机一定失败（而 CI 里 docker push 用的是你自己的 token，推得上去、
+# 但别人拉不下来 —— 本地看不出来）。这个工作流用「匿名 token」去取 manifest，
+# 与设备装机的取法一致，所以能提前发现。
+#
+# 本机（开发机）连不上 hub.docker.com / registry / auth.docker.io（实测四端点全 000，
+# 代理也只放行 GitHub），只有 CI 能查 —— 所以校验放在这里。
+#
+# 用法：Actions → Verify Image → Run workflow（无需参数）
+# ============================================================
+name: Verify Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: "test-center-guide"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 匿名校验镜像可拉性与架构
+        run: |
+          set -euo pipefail
+          NS="${{ secrets.DOCKERHUB_USERNAME }}"
+          REPO="${{ env.IMAGE_NAME }}"
+          if [ -z "$NS" ]; then
+            echo "::error::仓库 Secret DOCKERHUB_USERNAME 未配置"
+            exit 1
+          fi
+          TAG=$(python3 -c "import json;print(json.load(open('config.ini'))['version'])")
+          ACCEPT="application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json"
+          echo "待校验：${NS}/${REPO}:${TAG}（tag 取自 config.ini 的 version）"
+
+          TOKEN=$(curl -s --max-time 25 "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${NS}/${REPO}:pull" \
+                  | python3 -c "import json,sys;print(json.load(sys.stdin).get('token',''))")
+          CODE=$(curl -s -o /tmp/manifest.json -m 25 -w '%{http_code}' -H "Authorization: Bearer ${TOKEN}" -H "Accept: ${ACCEPT}" \
+                 "https://registry-1.docker.io/v2/${NS}/${REPO}/manifests/${TAG}")
+          echo "匿名拉取 manifest -> HTTP ${CODE}"
+          if [ "$CODE" != "200" ]; then
+            echo "::error::匿名拉不到（HTTP ${CODE}）。该仓库很可能是私有的 —— 到 hub.docker.com 改成 Public；TOS 设备是匿名拉取，私有仓库装不上。"
+            exit 1
+          fi
+
+          PLATS=$(python3 -c "
+          import json
+          d=json.load(open('/tmp/manifest.json'))
+          ms=d.get('manifests') or []
+          print(' '.join(sorted({(m.get('platform') or {}).get('os','?')+'/'+(m.get('platform') or {}).get('architecture','?') for m in ms})) if ms else '单架构（无 manifest list）')
+          ")
+          echo "::notice::匿名可拉 ✓  ${NS}/${REPO}:${TAG}  架构: ${PLATS}"
+
+      - name: 检查封装里的镜像引用与之一致
+        run: |
+          set -euo pipefail
+          NS="${{ secrets.DOCKERHUB_USERNAME }}"
+          TAG=$(python3 -c "import json;print(json.load(open('config.ini'))['version'])")
+          WANT="${NS}/${{ env.IMAGE_NAME }}:${TAG}"
+
+          # 直接走真实打包脚本：它会把 @@APP_IMAGE@@ 占位符替换成 dist/ 里的最终值，
+          # 顺带跑一遍合规自检。这样校验的是**真正要提交的那份**，不是模板。
+          python3 scripts/build-package.py --skip-verify
+          GOT=$(grep -E '^[[:space:]]{4}image:' dist/docker-compose.yml | head -1 \
+                | sed 's/.*image:[[:space:]]*//' | tr -d '"' | tr -d "'")
+
+          echo "封装里引用：${GOT}"
+          echo "已推送镜像：${WANT}"
+          if [ "$GOT" != "$WANT" ]; then
+            echo "::error::封装里的镜像与已推送的不一致 —— 装机时会拉不到。检查 versions.env 的 DOCKERHUB_USER / TOS_VERSION 与 config.ini 的 version 是否一致、是否已推送该 tag。"
+            exit 1
+          fi
+          echo "::notice::compose 引用与已推送镜像一致 ✓"
