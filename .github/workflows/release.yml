@@ -131,15 +131,7 @@ jobs:
             echo "::notice::可修复漏洞明细: ${DETAIL}"
 
             for T in 1.31.6-alpine 1.30.5-alpine alpine stable-alpine; do
-              META=$(curl -s --max-time 20 "https://hub.docker.com/v2/repositories/library/nginx/tags/${T}" \
-                     | python3 -c "
-import json,sys
-try:
-    d=json.load(sys.stdin)
-    print((d.get('last_updated') or '?')[:19], ' ', round((d.get('full_size') or 0)/1048576,1), 'MB')
-except Exception as e:
-    print('取不到')
-" 2>/dev/null || echo "取不到")
+              META=$(curl -s --max-time 20 "https://hub.docker.com/v2/repositories/library/nginx/tags/${T}" | python3 -c "import json,sys;d=json.load(sys.stdin);print(str(d.get('last_updated'))[:19], round((d.get('full_size') or 0)/1048576, 1), 'MB')" 2>/dev/null || echo "取不到")
               echo "::notice::tag ${T} 最近构建: ${META}"
             done
 
