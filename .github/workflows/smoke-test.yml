@@ -62,20 +62,28 @@ jobs:
           echo "--- 进程身份（必须是 1000，不能是 root）---"
           docker exec tcg-smoke id 2>&1 | head -2 || true
           echo "--- 各路径 HTTP 码 ---"
-          for p in / /healthz /features.html /deploy.html /generator.html /faq.html /assets/style.css /assets/app.js /assets/i18n.js; do
+          CODES=""
+          for p in / /healthz /features.html /deploy.html /generator.html /faq.html /assets/style.css /assets/app.js /assets/i18n.js /assets/favicon.svg; do
             C=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://127.0.0.1:19013${p}")
             printf '  %-22s %s\n' "$p" "$C"
+            CODES="${CODES}${p}=${C} "
           done
+          echo "::notice::各路径 HTTP 码：${CODES}"
           echo "--- 首页前 3 行 ---"
           curl -s --max-time 5 http://127.0.0.1:19013/ | head -3
+          echo "--- 容器内身份与用户 ---"
+          docker exec tcg-smoke id 2>&1 | head -1 || true
           echo "--- 容器日志 ---"
           docker logs --tail 15 tcg-smoke 2>&1 | tail -15
+
+          # 注意：先量值再删容器（上次顺序反了，首页量到 000）
+          HOME_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:19013/ || true)
+          HEALTH_NOW=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:19013/healthz || true)
           docker rm -f tcg-smoke >/dev/null 2>&1 || true
 
-          HOME_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:19013/ || true)
-          echo "::notice::冒烟结果 healthz=${OK}(1=200通过) 首页=${HOME_CODE}"
-          if [ "$OK" != "1" ]; then
-            echo "::error::容器 40 秒内没起来或 healthz 非 200 —— 见上方日志"
+          echo "::notice::冒烟结果 healthz(循环)=${OK}(1=200通过) 首页=${HOME_CODE} healthz(终值)=${HEALTH_NOW}"
+          if [ "$OK" != "1" ] || [ "$HOME_CODE" != "200" ]; then
+            echo "::error::容器没起来、healthz 非 200、或首页非 200 —— 见上方日志"
             exit 1
           fi
           echo "::notice::运行时冒烟测试通过 ✓ 非 root 起得来、healthz 与首页均正常"
