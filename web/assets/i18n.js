@@ -24,7 +24,7 @@ window.TC_I18N = {
     "common.copied": "Copied",
     "common.requires": "Requires DockerEngine from the TOS App Center.",
     "common.backhome": "Back to home",
-    "footer.version": "Test Center Guide · v1.0.0",
+    "footer.version": "Test Center Guide · v1.0.1",
     "footer.license": "Site content is MIT licensed; the image is built on the official nginx image.",
 
     /* ---------- 首页 ---------- */

@@ -24,7 +24,7 @@ Docker 应用（提交格式 `<appid>.tar.gz`，归档根层恰好 4 个文件�
 | 应用 ID | `test-center-guide-docker` |
 | 显示名（中） | Test Center 上手指南 |
 | 显示名（英） | Test Center Guide |
-| 版本 | `1.0.0`（改版见 `versions.env`） |
+| 版本 | `1.0.1`（改版见 `versions.env`） |
 | 发布者 | Ryan |
 | 分类 | `Development_Tools`、`Utilities` |
 | 依赖 | `DockerEngine` |
@@ -82,7 +82,7 @@ TOS_test-center-guide-docker/          # = GitHub 仓库根目录
 **A. 交给 CI（推荐）** —— 推一个 tag 即可，CI 会构建、扫描、推镜像、出包、发 Release：
 
 ```bash
-git tag 1.0.0 && git push origin 1.0.0
+git tag 1.0.1 && git push origin 1.0.1
 ```
 
 需先在仓库 `Settings → Secrets and variables → Actions` 配置：
@@ -110,11 +110,11 @@ python scripts/build-package.py --skip-verify    # 离线环境跳过镜像在�
 
 ## 提交上架清单
 
-- [ ] 两个 Secret 已配置，镜像已推到 Docker Hub（`whiteelm/test-center-guide:1.0.0`）
+- [ ] 两个 Secret 已配置，镜像已推到 Docker Hub（`whiteelm/test-center-guide:1.0.1`）
 - [ ] Release 资产齐全：`.tar.gz` + `.tar.gz.sha256` + `trivy-report.txt`
 - [ ] `config.ini` 的 `version` = `versions.env` 的 `TOS_VERSION` = Release tag（三处一致）
 - [ ] 平台注册填：Application ID `test-center-guide-docker`、Package Type **Docker**、
-      版本 `1.0.0`、Repository URL `https://github.com/RyanYang163/test-center-guide-docker`
+      版本 `1.0.1`、Repository URL `https://github.com/RyanYang163/test-center-guide-docker`
 - [ ] 设备上确认 `19013` 端口未被占用
 - [ ] 备注栏写清本应用的用途（静态指南 + 部署助手），避免被判「功能不完整」
 
@@ -122,7 +122,7 @@ python scripts/build-package.py --skip-verify    # 离线环境跳过镜像在�
 
 | 工作流 | 触发 | 作用 |
 |--------|------|------|
-| `release.yml` | 推 tag（`1.0.0` / `v1.0.0`） | 全链路：构建 → Trivy 门禁 → 推 Docker Hub（多架构）→ **匿名可拉校验** → 出 4 文件包 → 发 Release |
+| `release.yml` | 推 tag（`1.0.1` / `v1.0.1`） | 全链路：构建 → Trivy 门禁 → 推 Docker Hub（多架构）→ **匿名可拉校验** → 出 4 文件包 → 发 Release |
 | `smoke-test.yml` | 手动 | **运行时冒烟**：在 runner 上真拉镜像真起容器（`--user 1000:1000`），逐个探活 `/`、`/healthz`、5 个页面、静态资源，打印容器内 `id` 与日志 |
 | `verify-image.yml` | 手动 | 只读核查：匿名可拉性 + 多架构清单 + **封装里的镜像引用与已推送的是否一致** |
 
